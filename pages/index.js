@@ -7,6 +7,7 @@ const HomePage = (props) => {
       <Head>
         <title>React Meetups</title>
         <meta name="description" content="page to practice next js " />
+        <link rel="shortcut icon" href="tada.png" type="image/png" />
       </Head>
       <MeetupList meetups={props.meetups} />
     </>
@@ -48,7 +49,7 @@ export const getStaticProps = async () => {
         id: meetup._id.toString(),
       })),
     },
-    revalidate: 3600,
+    revalidate: 1,
   };
 };
 export default HomePage;
