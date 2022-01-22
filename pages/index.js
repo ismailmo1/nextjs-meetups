@@ -1,25 +1,54 @@
+import { MongoClient } from "mongodb";
+import Head from "next/head";
 import MeetupList from "../components/meetups/MeetupList";
-
-const DUMMY_MEETUPS = [
-  {
-    id: "m1",
-    title: "First Meetup",
-    image:
-      "https://media.cntraveler.com/photos/5fc6818f3cfe1de2cab79372/master/pass/Amsterdam-GettyImages-840603854.jpg",
-    address: "Address, 12345, City",
-    description: "First meetup ever",
-  },
-  {
-    id: "m2",
-    title: "Second Meetup",
-    image:
-      "https://www.investopedia.com/thmb/7SehEV5rH9Hcy7zO3vuRQVbeYjw=/1626x915/smart/filters:no_upscale()/pedestrian-architecture-road-skyline-traffic-street-71505-pxhere.com-ea7fd4d112754938828312ff123c084c.jpg",
-    address: "Address 2, 56789, City 2 ",
-    description: "Second meetup ever",
-  },
-];
-const HomePage = () => {
-  return <MeetupList meetups={DUMMY_MEETUPS} />;
+const HomePage = (props) => {
+  return (
+    <>
+      <Head>
+        <title>React Meetups</title>
+        <meta name="description" content="page to practice next js " />
+      </Head>
+      <MeetupList meetups={props.meetups} />
+    </>
+  );
 };
 
+// export const getServerSideProps = async (context) => {
+//   //  fetch data
+//   // this func will run server side on every request
+//   // const res= context.res;
+//   // const req= context.req;
+//   return {
+//     props: {
+//       meetups: DUMMY_MEETUPS,
+//     },
+//   };
+// };
+
+export const getStaticProps = async () => {
+  // api call etc
+  // cache page and refresh data on revalidate arg (ms)
+  const client = await MongoClient.connect(
+    `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@${process.env.DB_HOST}/meetups?retryWrites=true&w=majority`
+  );
+  const db = client.db();
+
+  const meetingsCollection = db.collection("meetups");
+
+  const meetups = await meetingsCollection.find().toArray();
+  client.close();
+
+  return {
+    props: {
+      meetups: meetups.map((meetup) => ({
+        title: meetup.title,
+        address: meetup.address,
+        description: meetup.description,
+        image: meetup.image,
+        id: meetup._id.toString(),
+      })),
+    },
+    revalidate: 3600,
+  };
+};
 export default HomePage;
